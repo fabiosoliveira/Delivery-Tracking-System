@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Tracker</title>
+</head>
+
+<body>
+    <h1>GPS Trackers</h1>
+    <ul></ul>
+    <script>
+        // Código JavaScript para mandar geolocalização para o servidor ws
+
+        const socket = new WebSocket("{{.}}");
+
+        socket.onmessage = (event) => {
+            console.log("Mensagem recebida do servidor:", event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("Erro no WebSocket:", error);
+        };
+
+        socket.onclose = () => {
+            console.log("Conexão WebSocket fechada");
+        };
+
+        // Código JavaScript para acessar geolocalização
+
+        const ulElement = document.querySelector('ul');
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            const liEelement = document.createElement('li');
+            liEelement.textContent = `Latitude: ${latitude}, Longitude: ${longitude}`;
+            ulElement.appendChild(liEelement);
+
+            socket.send(JSON.stringify({ latitude, longitude }));
+        }
+
+        function showError(error) {
+            console.log('Erro ao obter geolocalização:', error.message);
+        }
+
+        navigator.geolocation.watchPosition(showPosition, showError, {
+            enableHighAccuracy: true
+        });
+    </script>
+</body>
+
+</html>
