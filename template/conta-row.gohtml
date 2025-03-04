@@ -1,0 +1,21 @@
+{{define "ContaRow"}}
+<tr>
+    <td class="border border-gray-300 p-2">{{.ID}}</td>
+    <td class="border border-gray-300 p-2">{{.Name}}</td>
+    <td class="border border-gray-300 p-2">{{.Email}}</td>
+    <td class="border border-gray-300 p-2">{{if eq .UserType 0}}Empresa{{else}}Motorista{{end}}</td>
+    <td class="border border-gray-300 p-2 text-center flex">
+        <form action="/conta/{{.ID}}" method="POST">
+            <input type="hidden" name="_method" value="put" />
+            <input type="hidden" name="name" value="{{.Name}}">
+            <input type="hidden" name="email" value="{{.Email}}">
+            <input type="hidden" name="type" value="{{.UserType}}">
+            <button class="bg-yellow-500 text-white px-2 py-1 rounded">Editar</button>
+        </form>
+        <form action="/conta/{{.ID}}" method="POST">
+            <input type="hidden" name="_method" value="delete" />
+            <button class="bg-red-500 text-white px-2 py-1 rounded ml-2">Excluir</button>
+        </form>
+    </td>
+</tr>
+{{end}}
