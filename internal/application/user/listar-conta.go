@@ -1,16 +1,16 @@
 package user
 
 type ListarConta struct {
-	UserDataAccessObject UserDataAccessObject
+	userDao UserDataAccessObject
 }
 
-func NewListarConta(repository UserDataAccessObject) *ListarConta {
+func NewListarConta(userDao UserDataAccessObject) *ListarConta {
 	return &ListarConta{
-		UserDataAccessObject: repository,
+		userDao: userDao,
 	}
 }
 
 func (c *ListarConta) Execute(user *User) error {
-	c.UserDataAccessObject.ListarContas()
+	c.userDao.ListarContas()
 	return nil
 }
