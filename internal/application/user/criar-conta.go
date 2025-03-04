@@ -1,16 +1,16 @@
 package user
 
 type CriarConta struct {
-	UserRepository UserRepository
+	userRepository UserRepository
 }
 
 func NewCriarConta(repository UserRepository) *CriarConta {
 	return &CriarConta{
-		UserRepository: repository,
+		userRepository: repository,
 	}
 }
 
 func (c *CriarConta) Execute(user *User) error {
-	c.UserRepository.Save(user)
+	c.userRepository.Save(user)
 	return nil
 }
