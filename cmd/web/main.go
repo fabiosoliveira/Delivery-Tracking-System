@@ -7,34 +7,29 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/application/user"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/application/company"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/database"
 )
 
 func main() {
 
 	db := database.DB
-	userRepository := database.NewUserRepositorySqlite(db)
-	criarConta := user.NewCriarConta(userRepository)
+	companyRepository := database.NewCompanyRepositorySqlite(db)
+	cadastrarCompany := company.NewCadastrarCompany(companyRepository)
 
-	userDao := database.NewUserDataAccessObject(db)
+	// companyDao := database.NewCompanyDataAccessObject(db)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /conta", func(w http.ResponseWriter, r *http.Request) {
-		users, err := userDao.ListarContas()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	mux.HandleFunc("GET /auth/signup", func(w http.ResponseWriter, r *http.Request) {
 
-		tpl := template.Must(template.ParseFiles("template/conta.gohtml", "template/conta-row.gohtml"))
+		tpl := template.Must(template.ParseFiles("template/signup.gohtml"))
 
-		tpl.Execute(w, users)
+		tpl.Execute(w, nil)
 
 	})
 
-	mux.HandleFunc("POST /conta", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /auth/signup", func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -44,19 +39,16 @@ func main() {
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		password := r.FormValue("password")
-		userType := r.FormValue("type")
 
-		userTypeID, err := strconv.Atoi(userType)
+		company := company.NewCompany(name, email, password)
+
+		err = cadastrarCompany.Execute(company)
 		if err != nil {
-			http.Error(w, "Invalid user type", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		user := user.NewUser(name, email, password, user.UserType(userTypeID))
-
-		criarConta.Execute(user)
-
-		http.Redirect(w, r, "/conta", http.StatusSeeOther)
+		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
 	})
 
 	mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -78,17 +70,10 @@ func main() {
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		password := r.FormValue("password")
-		userType := r.FormValue("type")
 
-		userTypeID, err := strconv.Atoi(userType)
-		if err != nil {
-			http.Error(w, "Invalid user type", http.StatusBadRequest)
-			return
-		}
+		fmt.Println(name, email, password)
 
-		fmt.Println(name, email, password, user.UserType(userTypeID))
-
-		http.Redirect(w, r, "/conta", http.StatusSeeOther)
+		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
 	})
 
 	log.Println("Servidor Http iniciado na porta 8080...")
