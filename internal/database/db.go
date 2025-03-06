@@ -17,12 +17,11 @@ func initDB() {
 	}
 
 	sqlStmt := `
-	CREATE TABLE IF NOT EXISTS users (
+	CREATE TABLE IF NOT EXISTS companies (
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
 		email TEXT NOT NULL,
-		password TEXT NOT NULL,
-		type INTEGER NOT NULL
+		password TEXT NOT NULL
 	)`
 
 	_, err = DB.Exec(sqlStmt)
