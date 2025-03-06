@@ -32,7 +32,7 @@ func main() {
 	mux.HandleFunc("POST /auth/signup", func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			TrowError(err, w, r)
 			return
 		}
 
@@ -44,7 +44,7 @@ func main() {
 
 		err = cadastrarCompany.Execute(company)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			TrowError(err, w, r)
 			return
 		}
 
@@ -80,4 +80,16 @@ func main() {
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal("Erro ao iniciar servidor:", err)
 	}
+}
+
+func TrowError(err error, w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseFiles("template/error.gohtml"))
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusBadRequest)
+
+	tpl.Execute(w, struct {
+		Error string
+		Url   string
+	}{err.Error(), r.URL.String()})
 }
