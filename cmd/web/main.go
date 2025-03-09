@@ -1,21 +1,19 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/application/company"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/database"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 )
 
 func main() {
 
 	db := database.DB
-	companyRepository := database.NewCompanyRepositorySqlite(db)
-	cadastrarCompany := company.NewCadastrarCompany(companyRepository)
+	userRepository := database.NewUserRepositorySqlite(db)
+	signUp := auth.NewSignUp(userRepository)
 
 	// companyDao := database.NewCompanyDataAccessObject(db)
 
@@ -40,9 +38,13 @@ func main() {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		company := company.NewCompany(name, email, password)
+		signUpInput := &auth.SignUpInput{
+			Name:     name,
+			Email:    email,
+			Password: password,
+		}
 
-		err = cadastrarCompany.Execute(company)
+		err = signUp.Execute(signUpInput)
 		if err != nil {
 			TrowError(err, w, r)
 			return
@@ -51,30 +53,30 @@ func main() {
 		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
 	})
 
-	mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.PathValue("_method"))
-		id, err := strconv.Atoi(r.PathValue("id"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	// mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// 	fmt.Println(r.PathValue("_method"))
+	// 	id, err := strconv.Atoi(r.PathValue("id"))
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusBadRequest)
+	// 		return
+	// 	}
 
-		fmt.Println(id)
+	// 	fmt.Println(id)
 
-		err = r.ParseForm()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	// 	err = r.ParseForm()
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusBadRequest)
+	// 		return
+	// 	}
 
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		password := r.FormValue("password")
+	// 	name := r.FormValue("name")
+	// 	email := r.FormValue("email")
+	// 	password := r.FormValue("password")
 
-		fmt.Println(name, email, password)
+	// 	fmt.Println(name, email, password)
 
-		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
-	})
+	// 	http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
+	// })
 
 	log.Println("Servidor Http iniciado na porta 8080...")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
