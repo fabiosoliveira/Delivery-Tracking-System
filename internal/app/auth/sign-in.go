@@ -17,23 +17,29 @@ func NewSignIn(repository domain.UserRepository) *SignIn {
 	}
 }
 
-func (su *SignIn) Execute(inut *SignInInput) error {
+func (su *SignIn) Execute(inut *SignInInput) (*SignInOutput, error) {
 	user, err := su.userRepository.FindByEmail(&inut.Email)
 	if err != nil {
-		return fmt.Errorf("error signing: %w", err)
+		return nil, fmt.Errorf("error signing: %w", err)
 	}
 
 	if user == nil {
-		return errors.New("error signing: user not found")
+		return nil, errors.New("error signing: user not found")
 	}
 
-	// TODO: implementar autenticação
+	if user.Password != inut.Password {
+		return nil, errors.New("error signing: invalid password")
+	}
 
-	return nil
+	return &SignInOutput{UserId: user.ID, UserType: user.UserType.String()}, nil
 }
 
 type SignInInput struct {
-	Name     string
 	Email    string
 	Password string
+}
+
+type SignInOutput struct {
+	UserId   uint
+	UserType *string
 }
