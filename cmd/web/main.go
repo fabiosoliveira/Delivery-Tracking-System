@@ -1,19 +1,25 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 )
+
+// The secret key used for AES-GCM encryption must be exactly 32 bytes long.
+var secretKey = []byte("12345678901234567890123456789012")
 
 func main() {
 
 	db := database.DB
 	userRepository := database.NewUserRepositorySqlite(db)
 	signUp := auth.NewSignUp(userRepository)
+	signIn := auth.NewSignIn(userRepository)
 
 	// companyDao := database.NewCompanyDataAccessObject(db)
 
@@ -51,6 +57,59 @@ func main() {
 		}
 
 		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
+	})
+
+	mux.HandleFunc("GET /auth/signin", func(w http.ResponseWriter, r *http.Request) {
+
+		tpl := template.Must(template.ParseFiles("template/signin.gohtml"))
+
+		tpl.Execute(w, nil)
+
+	})
+
+	mux.HandleFunc("POST /auth/signin", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			TrowError(err, w, r)
+			return
+		}
+
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		signInInput := &auth.SignInInput{
+			Email:    email,
+			Password: password,
+		}
+
+		output, err := signIn.Execute(signInInput)
+		if err != nil {
+			TrowError(err, w, r)
+			return
+		}
+
+		b, err := json.Marshal(output)
+		if err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
+		cookie := &http.Cookie{
+			Name:     "userCookie",
+			Value:    string(b),
+			Path:     "/",
+			MaxAge:   3600,
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		}
+
+		if err := cookies.WriteEncrypted(w, cookie, secretKey); err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 	})
 
 	// mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
