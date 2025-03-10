@@ -90,7 +90,7 @@ func main() {
 
 		b, err := json.Marshal(output)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			TrowError(err, w, r)
 			return
 		}
 
@@ -105,7 +105,7 @@ func main() {
 		}
 
 		if err := cookies.WriteEncrypted(w, cookie, secretKey); err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			TrowError(err, w, r)
 			return
 		}
 
