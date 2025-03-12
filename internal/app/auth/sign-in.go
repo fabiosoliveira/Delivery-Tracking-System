@@ -27,11 +27,11 @@ func (su *SignIn) Execute(inut *SignInInput) (*SignInOutput, error) {
 		return nil, errors.New("error signing: user not found")
 	}
 
-	if user.Password != inut.Password {
+	if user.VerifyPassword(inut.Password) {
 		return nil, errors.New("error signing: invalid password")
 	}
 
-	return &SignInOutput{UserId: user.ID, UserType: user.UserType.String()}, nil
+	return &SignInOutput{UserId: user.ID(), UserType: user.UserType().String()}, nil
 }
 
 type SignInInput struct {
