@@ -29,9 +29,10 @@ func (ur UserRepositorySqlite) Save(User *domain.User) error {
 func (ur UserRepositorySqlite) FindByEmail(email *string) (*domain.User, error) {
 	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ?", email)
 
-	var user domain.User
+	var id, userType int
+	var name, _email, passwordHash string
 
-	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.UserType)
+	err := row.Scan(&id, &name, &_email, &passwordHash, &userType)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -39,5 +40,6 @@ func (ur UserRepositorySqlite) FindByEmail(email *string) (*domain.User, error) 
 		return nil, fmt.Errorf("error finding user: %w", err)
 	}
 
-	return &user, nil
+	user := domain.RestoreUser(id, name, _email, passwordHash, userType)
+	return user, nil
 }
