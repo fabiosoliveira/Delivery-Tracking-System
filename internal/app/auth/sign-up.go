@@ -27,11 +27,9 @@ func (su *SignUp) Execute(inut *SignUpInput) error {
 		return errors.New("error signing up: company already exists")
 	}
 
-	company = &domain.User{
-		Name:     inut.Name,
-		Email:    inut.Email,
-		Password: inut.Password,
-		UserType: domain.UserTypeCompany,
+	company, err = domain.NewCompany(inut.Name, inut.Email, inut.Password)
+	if err != nil {
+		return fmt.Errorf("error signing up: %w", err)
 	}
 
 	err = su.userRepository.Save(company)
