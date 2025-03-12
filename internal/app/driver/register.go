@@ -27,7 +27,7 @@ func (r *Register) Execute(inut *RegisterInput) error {
 		return errors.New("error register driver: driver already exists")
 	}
 
-	driver, err = domain.NewUser(inut.Name, inut.Email, inut.Password, domain.UserTypeDriver)
+	driver, err = domain.NewDriver(inut.Name, inut.Email, inut.Password)
 	if err != nil {
 		return fmt.Errorf("error register driver: %w", err)
 	}
