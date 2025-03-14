@@ -17,8 +17,13 @@ func NewUserRepositorySqlite(db *sql.DB) domain.UserRepository {
 	}
 }
 
-func (ur UserRepositorySqlite) Save(User *domain.User) error {
-	_, err := ur.Db.Exec("INSERT INTO Users (name, email, password, user_type) VALUES (?, ?, ?, ?)", User.Name, User.Email, User.Password, User.UserType)
+func (ur UserRepositorySqlite) Save(user domain.User) error {
+	var companyId any
+	if user.UserType() == domain.UserTypeDriver {
+		companyId = user.(*domain.Driver).CompanyId()
+	}
+
+	_, err := ur.Db.Exec("INSERT INTO Users (name, email, password, company_id) VALUES (?, ?, ?, ?)", user.Name(), user.Email(), user.Password(), companyId)
 	if err != nil {
 		return fmt.Errorf("error saving user: %w", err)
 	}
@@ -26,13 +31,14 @@ func (ur UserRepositorySqlite) Save(User *domain.User) error {
 	return nil
 }
 
-func (ur UserRepositorySqlite) FindByEmail(email *string) (*domain.User, error) {
+func (ur UserRepositorySqlite) FindByEmail(email *string) (domain.User, error) {
 	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ?", email)
 
-	var id, userType int
+	var id int
+	var companyId any
 	var name, _email, passwordHash string
 
-	err := row.Scan(&id, &name, &_email, &passwordHash, &userType)
+	err := row.Scan(&id, &name, &_email, &passwordHash, &companyId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -40,6 +46,34 @@ func (ur UserRepositorySqlite) FindByEmail(email *string) (*domain.User, error) 
 		return nil, fmt.Errorf("error finding user: %w", err)
 	}
 
-	user := domain.RestoreUser(id, name, _email, passwordHash, userType)
+	if companyId != nil {
+		user := domain.RestoreDriver(id, name, _email, passwordHash, companyId.(int))
+		return user, nil
+	}
+
+	user := domain.RestoreCompany(id, name, _email, passwordHash)
 	return user, nil
+}
+
+func (ur UserRepositorySqlite) ListDriversByCompanyId(id int) ([]domain.User, error) {
+	rows, err := ur.Db.Query("SELECT * FROM Users WHERE company_id = ?", id)
+	if err != nil {
+		return nil, fmt.Errorf("error listing drivers: %w", err)
+	}
+	defer rows.Close()
+
+	var drivers []domain.User
+	for rows.Next() {
+		var id, companyId int
+		var name, _email, passwordHash string
+		if err := rows.Scan(&id, &name, &_email, &passwordHash, &companyId); err != nil {
+			return nil, fmt.Errorf("error listing drivers: %w", err)
+		}
+
+		driver := domain.RestoreDriver(id, name, _email, passwordHash, companyId)
+
+		drivers = append(drivers, driver)
+	}
+
+	return drivers, nil
 }
