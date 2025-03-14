@@ -1,4 +1,4 @@
-package auth
+package driver
 
 import (
 	"errors"
@@ -27,7 +27,7 @@ func (r *Register) Execute(inut *RegisterInput) error {
 		return errors.New("error register driver: driver already exists")
 	}
 
-	driver, err = domain.NewDriver(inut.Name, inut.Email, inut.Password)
+	driver, err = domain.NewDriver(inut.Name, inut.Email, inut.Password, inut.CompanyId)
 	if err != nil {
 		return fmt.Errorf("error register driver: %w", err)
 	}
@@ -40,7 +40,8 @@ func (r *Register) Execute(inut *RegisterInput) error {
 }
 
 type RegisterInput struct {
-	Name     string
-	Email    string
-	Password string
+	Name      string
+	Email     string
+	Password  string
+	CompanyId uint
 }
