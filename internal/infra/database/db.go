@@ -22,7 +22,7 @@ func initDB() {
 		name TEXT NOT NULL,
 		email TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL,
-		user_type INTEGER NOT NULL
+		company_id INTEGER
 	)`
 
 	_, err = DB.Exec(sqlStmt)
