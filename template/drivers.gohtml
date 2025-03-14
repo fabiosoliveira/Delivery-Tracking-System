@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Rastreamento de Entregas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center">Cadastro Motorista</h1>
+        
+        <form action="/drivers" method="POST" class="mt-4">
+            <label class="block text-gray-700">Nome</label>
+            <input name="name" type="text" placeholder="Digite seu nome" class="w-full p-2 border rounded mt-2">
+            
+            <label class="block text-gray-700 mt-2">Email</label>
+            <input name="email" type="email" placeholder="Digite seu email" class="w-full p-2 border rounded mt-2">
+            
+            <label class="block text-gray-700 mt-2">Senha</label>
+            <input name="password" type="password" placeholder="Digite sua senha" class="w-full p-2 border rounded mt-2">
+            
+            <!-- <label class="block text-gray-700 mt-2">Tipo</label>
+            <select name="type" class="w-full p-2 border rounded mt-2">
+                <option value="0">Empresa</option>
+                <option value="1">Motorista</option>
+            </select> -->
+            
+            <button class="bg-blue-500 text-white px-4 py-2 rounded mt-4 w-full">Cadastrar</button>
+        </form>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
+        <h2 class="text-2xl font-bold text-center">Lista de Motoristas</h2>
+        <table class="w-full mt-4 border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border border-gray-300 p-2">Id</th>
+                    <th class="border border-gray-300 p-2">Nome</th>
+                    <th class="border border-gray-300 p-2">Email</th>
+                    <!-- <th class="border border-gray-300 p-2">Tipo</th>
+                    <th class="border border-gray-300 p-2">Ações</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                {{template "DriverRow" .}}
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
