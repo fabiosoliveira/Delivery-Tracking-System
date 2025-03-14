@@ -5,23 +5,30 @@ import (
 	"unicode/utf8"
 )
 
-type User struct {
+type User interface {
+	ID() uint
+	Name() string
+	Email() string
+	Password() string
+	VerifyPassword(password string) bool
+	UserType() userType
+}
+
+type UserAbstract struct {
 	id       uint
 	name     string
 	email    email
 	password password
-	userType userType
 }
 
-func NewUser(name string, email string, password string, userType userType) (*User, error) {
-	user := &User{}
+func newUser(name string, email string, password string) (User, error) {
+	user := &UserAbstract{}
 
 	errorName := user.SetName(name)
 	errorEmail := user.SetEmail(email)
 	errorPassword := user.SetPassword(password)
-	user.userType = userType
 
-	err := errors.Join(errorName, errorEmail, errorPassword)
+	err := ErrorsJoin(errorName, errorEmail, errorPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -29,17 +36,16 @@ func NewUser(name string, email string, password string, userType userType) (*Us
 	return user, nil
 }
 
-func RestoreUser(id int, name string, _email string, passwordHash string, _userType int) *User {
-	return &User{
+func restoreUser(id int, name string, _email string, passwordHash string) User {
+	return &UserAbstract{
 		id:       uint(id),
 		name:     name,
 		email:    email(_email),
 		password: password(passwordHash),
-		userType: userType(_userType),
 	}
 }
 
-func (u *User) SetName(name string) error {
+func (u *UserAbstract) SetName(name string) error {
 	nameLength := utf8.RuneCountInString(name)
 
 	if nameLength < 3 || nameLength > 30 {
@@ -50,7 +56,7 @@ func (u *User) SetName(name string) error {
 	return nil
 }
 
-func (u *User) SetEmail(e_mail string) error {
+func (u *UserAbstract) SetEmail(e_mail string) error {
 	_email := email(e_mail)
 
 	err := _email.ValidateEmail()
@@ -62,7 +68,7 @@ func (u *User) SetEmail(e_mail string) error {
 	return nil
 }
 
-func (u *User) SetPassword(pass string) error {
+func (u *UserAbstract) SetPassword(pass string) error {
 	_password := password(pass)
 
 	err := _password.ValidatePassword()
@@ -79,30 +85,26 @@ func (u *User) SetPassword(pass string) error {
 	return nil
 }
 
-// func (u *User) SetUserType(userType userType) {
-// 	u.userType = userType
-// }
-
-func (u *User) ID() uint {
+func (u *UserAbstract) ID() uint {
 	return u.id
 }
 
-func (u *User) Name() string {
+func (u *UserAbstract) Name() string {
 	return u.name
 }
 
-func (u *User) Email() string {
+func (u *UserAbstract) Email() string {
 	return string(u.email)
 }
 
-func (u *User) Password() string {
+func (u *UserAbstract) Password() string {
 	return string(u.password)
 }
 
-func (u *User) VerifyPassword(password string) bool {
+func (u *UserAbstract) VerifyPassword(password string) bool {
 	return u.password.VerifyPassword(password)
 }
 
-func (u *User) UserType() userType {
-	return u.userType
+func (u *UserAbstract) UserType() userType {
+	panic("not implemented")
 }
