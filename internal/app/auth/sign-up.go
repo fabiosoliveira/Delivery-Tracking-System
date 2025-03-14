@@ -27,12 +27,12 @@ func (su *SignUp) Execute(inut *SignUpInput) error {
 		return errors.New("error signing up: company already exists")
 	}
 
-	company, err = domain.NewCompany(inut.Name, inut.Email, inut.Password)
+	newCompany, err := domain.NewCompany(inut.Name, inut.Email, inut.Password)
 	if err != nil {
 		return fmt.Errorf("error signing up: %w", err)
 	}
 
-	err = su.userRepository.Save(company)
+	err = su.userRepository.Save(newCompany)
 	if err != nil {
 		return fmt.Errorf("error signing up: %w", err)
 	}
