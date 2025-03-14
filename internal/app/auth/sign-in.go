@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
@@ -17,8 +18,8 @@ func NewSignIn(repository domain.UserRepository) *SignIn {
 	}
 }
 
-func (su *SignIn) Execute(inut *SignInInput) (*SignInOutput, error) {
-	user, err := su.userRepository.FindByEmail(&inut.Email)
+func (su *SignIn) Execute(input *SignInInput) (*SignInOutput, error) {
+	user, err := su.userRepository.FindByEmail(&input.Email)
 	if err != nil {
 		return nil, fmt.Errorf("error signing: %w", err)
 	}
@@ -27,11 +28,12 @@ func (su *SignIn) Execute(inut *SignInInput) (*SignInOutput, error) {
 		return nil, errors.New("error signing: user not found")
 	}
 
-	if user.VerifyPassword(inut.Password) {
+	if !user.VerifyPassword(input.Password) {
 		return nil, errors.New("error signing: invalid password")
 	}
 
-	return &SignInOutput{UserId: user.ID(), UserType: user.UserType().String()}, nil
+	id := strconv.Itoa(int(user.ID()))
+	return &SignInOutput{UserId: &id, UserType: user.UserType().String()}, nil
 }
 
 type SignInInput struct {
@@ -40,6 +42,6 @@ type SignInInput struct {
 }
 
 type SignInOutput struct {
-	UserId   uint
+	UserId   *string
 	UserType *string
 }
