@@ -1,18 +1,25 @@
 package main
 
 import (
-	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/securecookie"
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 )
 
-// The secret key used for AES-GCM encryption must be exactly 32 bytes long.
-var secretKey = []byte("12345678901234567890123456789012")
+// Hash keys should be at least 32 bytes long
+var hashKey = []byte("12345678901234567890123456789012")
+
+// Block keys should be 16 bytes (AES-128) or 32 bytes (AES-256) long.
+// Shorter keys may weaken the encryption used.
+var blockKey = []byte("1234567890123456")
+var s = securecookie.New(hashKey, blockKey)
 
 func main() {
 
@@ -20,6 +27,8 @@ func main() {
 	userRepository := database.NewUserRepositorySqlite(db)
 	signUp := auth.NewSignUp(userRepository)
 	signIn := auth.NewSignIn(userRepository)
+	listDrivers := driver.NewListDrivers(userRepository)
+	registerDriver := driver.NewRegister(userRepository)
 
 	// companyDao := database.NewCompanyDataAccessObject(db)
 
@@ -56,7 +65,7 @@ func main() {
 			return
 		}
 
-		http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
+		http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 	})
 
 	mux.HandleFunc("GET /auth/signin", func(w http.ResponseWriter, r *http.Request) {
@@ -88,30 +97,105 @@ func main() {
 			return
 		}
 
-		b, err := json.Marshal(output)
+		value := map[string]string{
+			"UserId":   *output.UserId,
+			"UserType": *output.UserType,
+		}
+
+		if encoded, err := s.Encode("userCookie", value); err == nil {
+			cookie := &http.Cookie{
+				Name:     "userCookie",
+				Value:    encoded,
+				Path:     "/",
+				MaxAge:   3600,
+				HttpOnly: true,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+			}
+			http.SetCookie(w, cookie)
+		}
+
+		http.Redirect(w, r, "/drivers", http.StatusSeeOther)
+	})
+
+	mux.HandleFunc("GET /drivers", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("userCookie")
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		value := make(map[string]string)
+
+		err = s.Decode("userCookie", cookie.Value, &value)
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		id, err := strconv.Atoi(value["UserId"])
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		tpl := template.Must(template.ParseFiles("template/drivers.gohtml", "template/drivers-row.gohtml"))
+
+		drivers, err := listDrivers.Execute(id)
 		if err != nil {
 			TrowError(err, w, r)
 			return
 		}
 
-		cookie := &http.Cookie{
-			Name:     "userCookie",
-			Value:    string(b),
-			Path:     "/",
-			MaxAge:   3600,
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteLaxMode,
+		tpl.Execute(w, drivers)
+	})
+
+	mux.HandleFunc("POST /drivers", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("userCookie")
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
 		}
 
-		if err := cookies.WriteEncrypted(w, cookie, secretKey); err != nil {
+		value := make(map[string]string)
+
+		err = s.Decode("userCookie", cookie.Value, &value)
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		id, err := strconv.Atoi(value["UserId"])
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		err = r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		register := &driver.RegisterInput{
+			Name:      name,
+			Email:     email,
+			Password:  password,
+			CompanyId: uint(id),
+		}
+
+		err = registerDriver.Execute(register)
+		if err != nil {
 			TrowError(err, w, r)
 			return
 		}
 
-		http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+		http.Redirect(w, r, "/drivers", http.StatusSeeOther)
 	})
-
 	// mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println(r.PathValue("_method"))
 	// 	id, err := strconv.Atoi(r.PathValue("id"))
