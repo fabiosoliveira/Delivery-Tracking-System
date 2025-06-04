@@ -1,0 +1,35 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "title" .}}Criar Entrega{{end}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+    <header>
+
+        <!-- Menu de Navegação -->
+        <nav class="bg-white shadow-md p-4 mb-6">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">Rastreamento de Entregas</h1>
+                <ul class="flex space-x-6">
+                    <li><a href="/auth/signup" class="text-gray-600 hover:text-blue-500">Sign up</a></li>
+                    <li><a href="/auth/signin" class="text-gray-600 hover:text-blue-500">Sign in</a></li>
+                    <li><a href="/drivers" class="text-gray-600 hover:text-blue-500">Drivers</a></li>
+                    <li><a href="/delivery" class="text-gray-600 hover:text-blue-500">Deliveries</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {{block "content" .}}{{end}}
+    </main>
+</body>
+
+</html>
+{{end}}
