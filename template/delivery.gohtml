@@ -1,0 +1,52 @@
+{{define "title"}}Criar nova entrega{{end}}
+
+{{define "content"}}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center">Criar Nova Entrega</h1>
+
+        <form action="/delivery" method="POST" class="mt-6 space-y-4">
+            <div>
+                <label class="block text-gray-700">Destinatário</label>
+                <input type="text" name="recipient" placeholder="Nome do cliente"
+                    class="w-full p-2 border rounded mt-1">
+            </div>
+
+            <div>
+                <label class="block text-gray-700">Endereço de Entrega</label>
+                <input type="text" name="address" placeholder="Rua, número, cidade..."
+                    class="w-full p-2 border rounded mt-1">
+            </div>
+
+            <div>
+                <label class="block text-gray-700">Selecionar Motorista</label>
+                <select name="driver_id" class="w-full p-2 border rounded mt-1">
+                    <option value="">Selecione um motorista</option>
+                    {{range .Drivers}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded w-full">Criar Entrega</button>
+        </form>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
+        <h2 class="text-2xl font-bold text-center">Lista de Entregas</h2>
+        <table class="w-full mt-4 border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border border-gray-300 p-2">Destinatário</th>
+                    <th class="border border-gray-300 p-2">Endereço</th>
+                    <th class="border border-gray-300 p-2">Motorista</th>
+                    <th class="border border-gray-300 p-2">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Deliveries}}
+                {{template "DeliveryRow" .}}
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+{{end}}
