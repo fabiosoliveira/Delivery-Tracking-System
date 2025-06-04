@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/securecookie"
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 )
@@ -21,6 +22,12 @@ var hashKey = []byte("12345678901234567890123456789012")
 var blockKey = []byte("1234567890123456")
 var s = securecookie.New(hashKey, blockKey)
 
+/**
+Fábio
+fabio@gmail.com
+123456As#
+**/
+
 func main() {
 
 	db := database.DB
@@ -30,15 +37,19 @@ func main() {
 	listDrivers := driver.NewListDrivers(userRepository)
 	registerDriver := driver.NewRegister(userRepository)
 
+	deliveryRepository := database.NewDeliveryRepositorySqlite(db)
+	createDelivery := delivery.NewCreateDelivery(deliveryRepository, userRepository)
+	listDelivery := delivery.NewListDelivery(deliveryRepository, userRepository)
+
 	// companyDao := database.NewCompanyDataAccessObject(db)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /auth/signup", func(w http.ResponseWriter, r *http.Request) {
 
-		tpl := template.Must(template.ParseFiles("template/signup.gohtml"))
+		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signup.gohtml"))
 
-		tpl.Execute(w, nil)
+		tpl.ExecuteTemplate(w, "layout", nil)
 
 	})
 
@@ -70,13 +81,15 @@ func main() {
 
 	mux.HandleFunc("GET /auth/signin", func(w http.ResponseWriter, r *http.Request) {
 
-		tpl := template.Must(template.ParseFiles("template/signin.gohtml"))
+		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signin.gohtml"))
 
-		tpl.Execute(w, nil)
+		tpl.ExecuteTemplate(w, "layout", nil)
 
 	})
 
 	mux.HandleFunc("POST /auth/signin", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("POST /auth/signin")
+
 		err := r.ParseForm()
 		if err != nil {
 			TrowError(err, w, r)
@@ -115,12 +128,15 @@ func main() {
 			http.SetCookie(w, cookie)
 		}
 
+		log.Println("Redirect to /drivers")
 		http.Redirect(w, r, "/drivers", http.StatusSeeOther)
 	})
 
 	mux.HandleFunc("GET /drivers", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /drivers")
 		cookie, err := r.Cookie("userCookie")
 		if err != nil {
+			log.Println("GET /drivers: cookie not found")
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		}
@@ -129,25 +145,27 @@ func main() {
 
 		err = s.Decode("userCookie", cookie.Value, &value)
 		if err != nil {
+			log.Println("GET /drivers: error decoding cookie", err)
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		}
 
 		id, err := strconv.Atoi(value["UserId"])
 		if err != nil {
+			log.Println("GET /drivers: error converting UserId to int", err)
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		}
-
-		tpl := template.Must(template.ParseFiles("template/drivers.gohtml", "template/drivers-row.gohtml"))
 
 		drivers, err := listDrivers.Execute(id)
 		if err != nil {
 			TrowError(err, w, r)
 			return
-		}
 
-		tpl.Execute(w, drivers)
+		}
+		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/drivers.gohtml", "template/drivers-row.gohtml"))
+
+		tpl.ExecuteTemplate(w, "layout", drivers)
 	})
 
 	mux.HandleFunc("POST /drivers", func(w http.ResponseWriter, r *http.Request) {
@@ -196,30 +214,115 @@ func main() {
 
 		http.Redirect(w, r, "/drivers", http.StatusSeeOther)
 	})
-	// mux.HandleFunc("POST /conta/{id}", func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Println(r.PathValue("_method"))
-	// 	id, err := strconv.Atoi(r.PathValue("id"))
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
 
-	// 	fmt.Println(id)
+	mux.HandleFunc("GET /delivery", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("userCookie")
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
 
-	// 	err = r.ParseForm()
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 		return
-	// 	}
+		value := make(map[string]string)
 
-	// 	name := r.FormValue("name")
-	// 	email := r.FormValue("email")
-	// 	password := r.FormValue("password")
+		err = s.Decode("userCookie", cookie.Value, &value)
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
 
-	// 	fmt.Println(name, email, password)
+		id, err := strconv.Atoi(value["UserId"])
+		if err != nil {
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
 
-	// 	http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
-	// })
+		drivers, err := listDrivers.Execute(id)
+		if err != nil {
+			TrowError(err, w, r)
+			return
+		}
+
+		deliveries, err := listDelivery.Execute(id)
+		if err != nil {
+			TrowError(err, w, r)
+			return
+		}
+
+		data := struct {
+			Drivers    []driver.ListDriversOutput
+			Deliveries []delivery.ListDeliveryOutput
+		}{
+			Drivers:    drivers,
+			Deliveries: deliveries,
+		}
+
+		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/delivery.gohtml", "template/delivery-row.gohtml"))
+
+		tpl.ExecuteTemplate(w, "layout", data)
+	})
+
+	mux.HandleFunc("POST /delivery", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("userCookie")
+		if err != nil {
+			log.Println("Error retrieving cookie:", err)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		value := make(map[string]string)
+
+		err = s.Decode("userCookie", cookie.Value, &value)
+		if err != nil {
+			log.Println("Error decoding cookie:", err)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		companyId, err := strconv.Atoi(value["UserId"])
+		if err != nil {
+			log.Println("Error converting UserId to int:", err)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		err = r.ParseForm()
+		if err != nil {
+			log.Println("Error parsing form:", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		recipient := r.FormValue("recipient")
+		address := r.FormValue("address")
+		driver_id := r.FormValue("driver_id")
+
+		driverId, err := strconv.Atoi(driver_id)
+		if err != nil {
+			log.Println("Error converting DriverId to int:", err)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+			return
+		}
+
+		log.Println("Received data - Driver ID:", driverId, "Recipient:", recipient, "Address:", address)
+
+		createDeliveryInput := &delivery.CreateDeliveryInput{
+			CompanyId: uint(companyId),
+			DriverId:  uint(driverId),
+			Recipient: recipient,
+			Address:   address,
+		}
+
+		log.Println("createDeliveryInput:", createDeliveryInput)
+
+		err = createDelivery.Execute(createDeliveryInput)
+		if err != nil {
+			log.Println("Error executing CreateDelivery:", err)
+			TrowError(err, w, r)
+			return
+		}
+
+		http.Redirect(w, r, "/delivery", http.StatusSeeOther)
+	})
 
 	log.Println("Servidor Http iniciado na porta 8080...")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
