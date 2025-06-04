@@ -31,10 +31,10 @@ func (ur UserRepositorySqlite) Save(user domain.User) error {
 	return nil
 }
 
-func (ur UserRepositorySqlite) FindByEmail(email *string) (domain.User, error) {
-	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ?", email)
+func (ur UserRepositorySqlite) FindById(userId uint) (domain.User, error) {
+	row := ur.Db.QueryRow("SELECT * FROM Users WHERE id = ?", userId)
 
-	var id int
+	var id int64
 	var companyId any
 	var name, _email, passwordHash string
 
@@ -47,11 +47,35 @@ func (ur UserRepositorySqlite) FindByEmail(email *string) (domain.User, error) {
 	}
 
 	if companyId != nil {
-		user := domain.RestoreDriver(id, name, _email, passwordHash, companyId.(int))
+		user := domain.RestoreDriver(int(id), name, _email, passwordHash, int(companyId.(int64)))
 		return user, nil
 	}
 
-	user := domain.RestoreCompany(id, name, _email, passwordHash)
+	user := domain.RestoreCompany(int(id), name, _email, passwordHash)
+	return user, nil
+}
+
+func (ur UserRepositorySqlite) FindByEmail(email *string) (domain.User, error) {
+	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ?", email)
+
+	var id int64
+	var companyId any
+	var name, _email, passwordHash string
+
+	err := row.Scan(&id, &name, &_email, &passwordHash, &companyId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("error finding user: %w", err)
+	}
+
+	if companyId != nil {
+		user := domain.RestoreDriver(int(id), name, _email, passwordHash, int(companyId.(int64)))
+		return user, nil
+	}
+
+	user := domain.RestoreCompany(int(id), name, _email, passwordHash)
 	return user, nil
 }
 
