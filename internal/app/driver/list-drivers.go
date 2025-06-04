@@ -22,10 +22,6 @@ func (r *ListDrivers) Execute(userId int) ([]ListDriversOutput, error) {
 		return nil, fmt.Errorf("error listing drivers: %w", err)
 	}
 
-	if len(drivers) == 0 {
-		return nil, fmt.Errorf("error listing drivers: no drivers found")
-	}
-
 	var driversOutput []ListDriversOutput
 	for _, driver := range drivers {
 		driversOutput = append(driversOutput, ListDriversOutput{int(driver.ID()), driver.Name(), driver.Email()})
