@@ -15,7 +15,6 @@ func initDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer DB.Close()
 
 	// deliveries (id, status: "pendente" | "em andamento" | "finalizada", empresa_id, motorista_id)
 	// locations (id, motorista_id, latitude, longitude, timestamp)
