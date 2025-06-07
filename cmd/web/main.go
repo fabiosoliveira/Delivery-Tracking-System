@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/securecookie"
 
@@ -324,10 +329,41 @@ func main() {
 		http.Redirect(w, r, "/delivery", http.StatusSeeOther)
 	})
 
-	log.Println("Servidor Http iniciado na porta 8080...")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatal("Erro ao iniciar servidor:", err)
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
 	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	// Iniciar servidor em goroutine
+	go func() {
+		fmt.Println("Servidor iniciado em http://localhost:8080")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Println("Erro ao iniciar o servidor:", err)
+		}
+	}()
+
+	<-stop
+	fmt.Println("\nEncerrando o servidor...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Encerrar servidor HTTP
+	if err := server.Shutdown(ctx); err != nil {
+		fmt.Println("Erro durante o shutdown do servidor:", err)
+	}
+
+	// Encerrar conexão com o banco de dados
+	if err := db.Close(); err != nil {
+		fmt.Println("Erro ao fechar conexão com banco de dados:", err)
+	} else {
+		fmt.Println("Conexão com banco de dados encerrada com sucesso.")
+	}
+
+	fmt.Println("Servidor finalizado com sucesso.")
 }
 
 func TrowError(err error, w http.ResponseWriter, r *http.Request) {
