@@ -38,7 +38,7 @@ func initDB() {
 
 	CREATE TABLE IF NOT EXISTS Locations (
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		driver_id INTEGER NOT NULL,
+		delivery_id INTEGER NOT NULL,
 		latitude REAL NOT NULL,
 		longitude REAL NOT NULL,
 		timestamp TEXT NOT NULL
