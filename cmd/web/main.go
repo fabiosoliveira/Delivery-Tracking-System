@@ -11,21 +11,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/securecookie"
-
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/ws"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 )
-
-// Hash keys should be at least 32 bytes long
-var hashKey = []byte("12345678901234567890123456789012")
-
-// Block keys should be 16 bytes (AES-128) or 32 bytes (AES-256) long.
-// Shorter keys may weaken the encryption used.
-var blockKey = []byte("1234567890123456")
-var s = securecookie.New(hashKey, blockKey)
 
 /**
 Fábio
@@ -120,7 +112,7 @@ func main() {
 			"UserType": *output.UserType,
 		}
 
-		if encoded, err := s.Encode("userCookie", value); err == nil {
+		if encoded, err := cookies.S.Encode("userCookie", value); err == nil {
 			cookie := &http.Cookie{
 				Name:     "userCookie",
 				Value:    encoded,
@@ -148,7 +140,7 @@ func main() {
 
 		value := make(map[string]string)
 
-		err = s.Decode("userCookie", cookie.Value, &value)
+		err = cookies.S.Decode("userCookie", cookie.Value, &value)
 		if err != nil {
 			log.Println("GET /drivers: error decoding cookie", err)
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
@@ -182,7 +174,7 @@ func main() {
 
 		value := make(map[string]string)
 
-		err = s.Decode("userCookie", cookie.Value, &value)
+		err = cookies.S.Decode("userCookie", cookie.Value, &value)
 		if err != nil {
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
@@ -229,7 +221,7 @@ func main() {
 
 		value := make(map[string]string)
 
-		err = s.Decode("userCookie", cookie.Value, &value)
+		err = cookies.S.Decode("userCookie", cookie.Value, &value)
 		if err != nil {
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
@@ -276,7 +268,7 @@ func main() {
 
 		value := make(map[string]string)
 
-		err = s.Decode("userCookie", cookie.Value, &value)
+		err = cookies.S.Decode("userCookie", cookie.Value, &value)
 		if err != nil {
 			log.Println("Error decoding cookie:", err)
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
@@ -328,6 +320,10 @@ func main() {
 
 		http.Redirect(w, r, "/delivery", http.StatusSeeOther)
 	})
+
+	mux.HandleFunc("GET /app-delivery", ws.AppDelivery)
+	mux.HandleFunc("POST /app-delivery/login", ws.LoginAppDelivery)
+	mux.HandleFunc("/ws", ws.HandleConnection)
 
 	server := &http.Server{
 		Addr:    ":8080",
