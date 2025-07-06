@@ -39,7 +39,7 @@
             liEelement.textContent = `Latitude: ${latitude}, Longitude: ${longitude}`;
             ulElement.appendChild(liEelement);
 
-            socket.send(JSON.stringify({ latitude, longitude }));
+            socket.send(JSON.stringify({ delivery_id: 1, latitude, longitude }));
         }
 
         function showError(error) {
@@ -49,6 +49,8 @@
         navigator.geolocation.watchPosition(showPosition, showError, {
             enableHighAccuracy: true
         });
+
+        
     </script>
 </body>
 
