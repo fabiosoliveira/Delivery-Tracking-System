@@ -1,10 +1,20 @@
 package domain
 
+import "time"
+
 type Location struct {
-	id        uint
-	latitude  float64
-	longitude float64
-	timestamp int64
+	Id        uint
+	Latitude  float64
+	Longitude float64
+	Timestamp int64
+}
+
+func NewLocation(latitude float64, longitude float64) *Location {
+	return &Location{
+		Latitude:  latitude,
+		Longitude: longitude,
+		Timestamp: time.Now().UnixMilli(),
+	}
 }
 
 type Delivery struct {
@@ -70,10 +80,10 @@ func (d *Delivery) Address() string {
 
 func (d *Delivery) AddLocation(id uint, latitude float64, longitude float64, timestamp int64) {
 	location := Location{
-		id:        id,
-		latitude:  latitude,
-		longitude: longitude,
-		timestamp: timestamp,
+		Id:        id,
+		Latitude:  latitude,
+		Longitude: longitude,
+		Timestamp: timestamp,
 	}
 	d.locations = append(d.locations, location)
 }
