@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App do Motorista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div id="app" class="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+        <!-- Tela de Login -->
+        <div id="login-screen">
+            <h2 class="text-2xl font-bold text-center mb-4">Login do Motorista</h2>
+            <input id="email" type="email" placeholder="Email" class="w-full p-2 border rounded mb-2">
+            <input id="password" type="password" placeholder="Senha" class="w-full p-2 border rounded mb-4">
+            <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded">Entrar</button>
+        </div>
+
+        <!-- Tela de Seleção de Entrega -->
+        <div id="delivery-selection" class="hidden">
+            <h2 class="text-xl font-semibold text-center mb-4">Selecione uma Entrega</h2>
+            <select id="delivery-list" class="w-full p-2 border rounded mb-4">
+                <option value="">Selecione</option>
+            </select>
+            <button onclick="startTracking()" class="w-full bg-green-500 text-white py-2 rounded">Iniciar
+                Entrega</button>
+        </div>
+
+        <!-- Tela de Rastreamento -->
+        <div id="tracking-screen" class="hidden">
+            <h2 class="text-xl font-semibold text-center mb-4">Rastreamento Ativo</h2>
+            <p class="text-center mb-2">Entrega: <span id="selected-delivery"></span></p>
+            <p class="text-center mb-4">Status: <span id="status">Pausado</span></p>
+            <div class="flex justify-between">
+                <button onclick="toggleTracking()" id="toggle-btn"
+                    class="bg-blue-600 text-white px-4 py-2 rounded w-full mr-2">Iniciar</button>
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded w-full ml-2">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tracking = false;
+        let deliveryId = null;
+        let socket = null;
+        let watchID = null;
+
+        
+
+        function startWebSocket() {
+
+            socket = new WebSocket("{{.}}");
+
+            socket.onmessage = (event) => {
+                console.log("Mensagem recebida do servidor:", event.data);
+            };
+
+            socket.onerror = (error) => {
+                console.error("Erro no WebSocket:", error);
+            };
+
+            socket.onclose = () => {
+                console.log("Conexão WebSocket fechada");
+            };
+
+        }
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+
+            socket.send(JSON.stringify({ delivery_id: deliveryId, latitude, longitude }));
+        }
+
+         function showError(error) {
+            console.log('Erro ao obter geolocalização:', error.message);
+        }
+
+        function startGeolocation() {
+            if (navigator.geolocation) {
+                
+                watchID = navigator.geolocation.watchPosition(showPosition, showError, {
+                    enableHighAccuracy: true
+                })
+            } else {
+                alert('Geolocalização não suportada.');
+            }
+        }
+
+
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (email && password) {
+                const response = await fetch('/app-delivery/login', {
+                    body: JSON.stringify({ email, password }),
+                    method: 'POST'
+                })
+
+                if (response.ok) {
+                    console.log('Login bem-sucedido');
+                    const success = await response.json();
+                    console.log(success);
+
+                    const deliveryList = document.getElementById('delivery-list')
+                    success.forEach(delivery => {
+                        const option = document.createElement('option');
+                        option.value = delivery.Id;
+                        option.textContent = `Entrega ${delivery.Id} - ${delivery.Address}`;
+                        deliveryList.appendChild(option);
+                    })
+
+
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('delivery-selection').classList.remove('hidden');
+                } else {
+                    console.log('Login falhou');
+                    const error = await response.json();
+                    console.log(error);
+
+                }
+
+            } else {
+                alert('Preencha os campos de email e senha.');
+            }
+        }
+
+        function startTracking() {
+            const selected = document.getElementById('delivery-list').value;
+            if (selected) {
+                document.getElementById('selected-delivery').innerText = selected;
+                deliveryId = +selected
+                document.getElementById('delivery-selection').classList.add('hidden');
+                document.getElementById('tracking-screen').classList.remove('hidden');
+            } else {
+                alert('Selecione uma entrega.');
+            }
+        }
+
+        function toggleTracking() {
+            const status = document.getElementById('status');
+            const toggleBtn = document.getElementById('toggle-btn');
+
+            if (!tracking) {
+                tracking = true;
+                toggleBtn.innerText = 'Pausar';
+                status.innerText = 'Enviando localizações...';
+                startWebSocket();
+                startGeolocation();
+
+            } else {
+                tracking = false;
+                toggleBtn.innerText = 'Iniciar';
+                status.innerText = 'Pausado';
+                navigator.geolocation.clearWatch(watchID);
+                socket.close();
+            }
+        }
+
+        function logout() {
+            tracking = false;
+            navigator.geolocation.clearWatch(watchID);
+                socket.close();
+            document.getElementById('tracking-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>
