@@ -1,5 +1,5 @@
 {{define "DeliveryRow"}}
-<tr>
+<tr onclick="window.open('/delivery/{{.Id}}/localization', '_blank');" style="cursor: pointer;">
     <td class="border border-gray-300 p-2">{{.Recipient}}</td>
     <td class="border border-gray-300 p-2">{{.Address}}</td>
     <td class="border border-gray-300 p-2">{{.Driver}}</td>
