@@ -100,3 +100,23 @@ func (d DeliveryRepositorySqlite) ListDeliveryByDriverId(driverId int) ([]domain
 
 	return deliveries, nil
 }
+
+func (d DeliveryRepositorySqlite) FindLocationsByDeliveryID(deliveryID int) ([]domain.Location, error) {
+	query := `SELECT latitude, longitude FROM Locations WHERE delivery_id = ? ORDER BY timestamp ASC`
+	rows, err := d.Db.Query(query, deliveryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var locations []domain.Location
+	for rows.Next() {
+		var location domain.Location
+		if err := rows.Scan(&location.Latitude, &location.Longitude); err != nil {
+			return nil, err
+		}
+		locations = append(locations, location)
+	}
+
+	return locations, nil
+}
