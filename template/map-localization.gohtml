@@ -48,7 +48,6 @@
         // Polyline para desenhar a rota
         const routePolyline = L.polyline(routeCoordinates, { color: 'blue' }).addTo(map);
 
-
         function updateLocation(lat, lng) {
             const newLatLng = L.latLng(lat, lng);
             marker.setLatLng(newLatLng);
@@ -60,43 +59,54 @@
             routePolyline.setLatLngs(routeCoordinates);
         }
 
-        // Conectar ao WebSocket
+        // Lógica de conexão WebSocket com reconexão
         const path = window.location.pathname;
         const parts = path.split('/');
         const deliveryId = parts[parts.length - 2]; // Assumes URL is /.../{id}/localization
 
         if (deliveryId) {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const socket = new WebSocket(`${protocol}//${window.location.host}/ws/${deliveryId}`);
+            const wsUrl = `${protocol}//${window.location.host}/ws/${deliveryId}`;
+            let socket;
 
-            socket.onopen = function(e) {
-                console.log("[open] Conexão estabelecida");
-            };
+            function connect() {
+                socket = new WebSocket(wsUrl);
 
-            socket.onmessage = function(event) {
-                console.log(`[message] Dados recebidos do servidor: ${event.data}`);
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.latitude && data.longitude) {
-                        updateLocation(data.latitude, data.longitude);
+                socket.onopen = function(e) {
+                    console.log("[open] Conexão estabelecida");
+                    document.getElementById('coords').innerText = 'Conectado. Aguardando localização...';
+                };
+
+                socket.onmessage = function(event) {
+                    console.log(`[message] Dados recebidos do servidor: ${event.data}`);
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.latitude && data.longitude) {
+                            updateLocation(data.latitude, data.longitude);
+                        }
+                    } catch (e) {
+                        console.error("Erro ao processar os dados da mensagem", e);
                     }
-                } catch (e) {
-                    console.error("Erro ao processar os dados da mensagem", e);
-                }
-            };
+                };
 
-            socket.onclose = function(event) {
-                if (event.wasClean) {
-                    console.log(`[close] Conexão fechada, código=${event.code} motivo=${event.reason}`);
-                } else {
-                    console.log('[close] A conexão caiu');
-                }
-                document.getElementById('coords').innerText = 'Conexão perdida.';
-            };
+                socket.onclose = function(event) {
+                    if (event.wasClean) {
+                        console.log(`[close] Conexão fechada, código=${event.code} motivo=${event.reason}`);
+                    } else {
+                        console.log('[close] A conexão caiu');
+                    }
+                    document.getElementById('coords').innerText = 'Conexão perdida. Tentando reconectar em 5 segundos...';
+                    setTimeout(connect, 5000); // Tenta reconectar após 5 segundos
+                };
 
-            socket.onerror = function(error) {
-                console.error(`[error] ${error.message}`);
-            };
+                socket.onerror = function(error) {
+                    console.error(`[error] ${error.message}`);
+                    // O onclose será chamado logo após o onerror, então a lógica de reconexão já está lá.
+                };
+            }
+
+            connect(); // Inicia a primeira conexão
+
         } else {
             console.error("Não foi possível obter o ID da entrega a partir da URL.");
             document.getElementById('coords').innerText = 'ID da entrega não encontrado na URL.';
