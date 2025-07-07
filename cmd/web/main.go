@@ -258,6 +258,14 @@ func main() {
 		tpl.ExecuteTemplate(w, "layout", data)
 	})
 
+	mux.HandleFunc("GET /delivery/{id}/localization", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /delivery/{id}/localization")
+
+		tpl := template.Must(template.ParseFiles("template/map-localization.gohtml"))
+
+		tpl.Execute(w, nil)
+	})
+
 	mux.HandleFunc("POST /delivery", func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("userCookie")
 		if err != nil {
@@ -324,6 +332,7 @@ func main() {
 	mux.HandleFunc("GET /app-delivery", ws.AppDelivery)
 	mux.HandleFunc("POST /app-delivery/login", ws.LoginAppDelivery)
 	mux.HandleFunc("/ws", ws.HandleConnection)
+	mux.HandleFunc("/ws/", ws.HandleClientConnection)
 
 	server := &http.Server{
 		Addr:    ":8080",
