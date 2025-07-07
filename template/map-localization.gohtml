@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Entrega</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center mb-4">Acompanhamento em Tempo Real</h1>
+
+        <div id="map" class="rounded shadow"></div>
+
+        <div class="mt-4 text-center">
+            <p class="text-gray-700">Última localização recebida:</p>
+            <p id="coords" class="font-mono text-blue-600">Aguardando localização...</p>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa o mapa
+        const map = L.map('map').setView([-12.9714, -38.5014], 13); // Salvador como ponto inicial
+
+        // Adiciona o tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Ícone do marcador
+        const markerIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+        });
+
+        // Marcador para a posição do motorista
+        const marker = L.marker([-12.9714, -38.5014], { icon: markerIcon }).addTo(map);
+
+        // Array para armazenar o histórico de coordenadas
+        const routeCoordinates = [];
+        // Polyline para desenhar a rota
+        const routePolyline = L.polyline(routeCoordinates, { color: 'blue' }).addTo(map);
+
+
+        function updateLocation(lat, lng) {
+            const newLatLng = L.latLng(lat, lng);
+            marker.setLatLng(newLatLng);
+            map.setView(newLatLng, 15);
+            document.getElementById('coords').innerText = `Latitude: ${lat.toFixed(5)}, Longitude: ${lng.toFixed(5)}`;
+
+            // Adiciona a nova coordenada à rota e atualiza a linha
+            routeCoordinates.push(newLatLng);
+            routePolyline.setLatLngs(routeCoordinates);
+        }
+
+        // Conectar ao WebSocket
+        const path = window.location.pathname;
+        const parts = path.split('/');
+        const deliveryId = parts[parts.length - 2]; // Assumes URL is /.../{id}/localization
+
+        if (deliveryId) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(`${protocol}//${window.location.host}/ws/${deliveryId}`);
+
+            socket.onopen = function(e) {
+                console.log("[open] Conexão estabelecida");
+            };
+
+            socket.onmessage = function(event) {
+                console.log(`[message] Dados recebidos do servidor: ${event.data}`);
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.latitude && data.longitude) {
+                        updateLocation(data.latitude, data.longitude);
+                    }
+                } catch (e) {
+                    console.error("Erro ao processar os dados da mensagem", e);
+                }
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`[close] Conexão fechada, código=${event.code} motivo=${event.reason}`);
+                } else {
+                    console.log('[close] A conexão caiu');
+                }
+                document.getElementById('coords').innerText = 'Conexão perdida.';
+            };
+
+            socket.onerror = function(error) {
+                console.error(`[error] ${error.message}`);
+            };
+        } else {
+            console.error("Não foi possível obter o ID da entrega a partir da URL.");
+            document.getElementById('coords').innerText = 'ID da entrega não encontrado na URL.';
+        }
+    </script>
+</body>
+</html>
