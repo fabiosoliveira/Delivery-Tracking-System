@@ -46,8 +46,31 @@
         let deliveryId = null;
         let socket = null;
         let watchID = null;
+        let wakeLock = null;
 
-        
+        async function toggleWakeLock(isTracking) {
+            if ('wakeLock' in navigator) {
+                if (isTracking) {
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Wake Lock ativado.');
+                        wakeLock.addEventListener('release', () => {
+                            console.log('Wake Lock foi liberado.');
+                        });
+                    } catch (err) {
+                        console.error(`${err.name}, ${err.message}`);
+                    }
+                } else {
+                    if (wakeLock !== null) {
+                        wakeLock.release();
+                        wakeLock = null;
+                        console.log('Wake Lock desativado.');
+                    }
+                }
+            } else {
+                console.warn('API Wake Lock não é suportada neste navegador.');
+            }
+        }
 
         function startWebSocket() {
 
@@ -153,6 +176,7 @@
                 status.innerText = 'Enviando localizações...';
                 startWebSocket();
                 startGeolocation();
+                toggleWakeLock(true);
 
             } else {
                 tracking = false;
@@ -160,13 +184,15 @@
                 status.innerText = 'Pausado';
                 navigator.geolocation.clearWatch(watchID);
                 socket.close();
+                toggleWakeLock(false);
             }
         }
 
         function logout() {
             tracking = false;
             navigator.geolocation.clearWatch(watchID);
-                socket.close();
+            socket.close();
+            toggleWakeLock(false);
             document.getElementById('tracking-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         }
