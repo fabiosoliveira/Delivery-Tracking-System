@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -37,6 +38,7 @@ func main() {
 	deliveryRepository := database.NewDeliveryRepositorySqlite(db)
 	createDelivery := delivery.NewCreateDelivery(deliveryRepository, userRepository)
 	listDelivery := delivery.NewListDelivery(deliveryRepository, userRepository)
+	getDeliveryHistory := delivery.NewGetDeliveryHistory(deliveryRepository)
 
 	// companyDao := database.NewCompanyDataAccessObject(db)
 
@@ -333,6 +335,23 @@ func main() {
 	mux.HandleFunc("POST /app-delivery/login", ws.LoginAppDelivery)
 	mux.HandleFunc("/ws", ws.HandleConnection)
 	mux.HandleFunc("/ws/", ws.HandleClientConnection)
+
+	mux.HandleFunc("GET /api/delivery/{id}/history", func(w http.ResponseWriter, r *http.Request) {
+		deliveryId, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			http.Error(w, "Invalid delivery ID", http.StatusBadRequest)
+			return
+		}
+
+		history, err := getDeliveryHistory.Execute(deliveryId)
+		if err != nil {
+			http.Error(w, "Error fetching delivery history", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(history)
+	})
 
 	server := &http.Server{
 		Addr:    ":8080",
