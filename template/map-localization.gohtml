@@ -59,12 +59,36 @@
             routePolyline.setLatLngs(routeCoordinates);
         }
 
+        async function fetchHistory(deliveryId) {
+            
+            try {
+                const response = await fetch(`/api/delivery/${deliveryId}/history`);
+                if (response.ok) {
+                    const history = await response.json();
+                    
+                    if (history && history.length > 0) {
+                        history.forEach(loc => {
+                            const newLatLng = L.latLng(loc.latitude, loc.longitude);
+                            routeCoordinates.push(newLatLng);
+                        });
+                        routePolyline.setLatLngs(routeCoordinates);
+                        const lastLocation = history[history.length - 1];
+                        updateLocation(lastLocation.latitude, lastLocation.longitude);
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao buscar histórico de localização:", error);
+            }
+        }
+
         // Lógica de conexão WebSocket com reconexão
         const path = window.location.pathname;
         const parts = path.split('/');
         const deliveryId = parts[parts.length - 2]; // Assumes URL is /.../{id}/localization
 
         if (deliveryId) {
+            fetchHistory(deliveryId); // Busca o histórico antes de conectar ao WebSocket
+
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws/${deliveryId}`;
             let socket;
