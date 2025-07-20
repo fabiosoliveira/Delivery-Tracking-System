@@ -2,18 +2,13 @@ package ws
 
 import (
 	"encoding/json"
-	"fmt"
-	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 	"github.com/gorilla/websocket"
 )
@@ -117,93 +112,6 @@ func HandleClientConnection(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-}
-
-func AppDelivery(w http.ResponseWriter, r *http.Request) {
-	homeTemplate := template.Must(template.ParseFiles("template/app-delivery.gohtml"))
-
-	// homeTemplate.Execute(w, "wss://"+r.Host+"/ws")
-	homeTemplate.Execute(w, "wss://hm3c050c-8080.brs.devtunnels.ms/ws")
-}
-
-func LoginAppDelivery(w http.ResponseWriter, r *http.Request) {
-	log.Println("POST /LoginAppDelivery")
-
-	userRepository := database.NewUserRepositorySqlite(database.DB)
-	signIn := auth.NewSignIn(userRepository)
-
-	deliveryRepository := database.NewDeliveryRepositorySqlite(database.DB)
-	listDelivery := NewListDelivery(deliveryRepository, userRepository)
-
-	jsonData, err := io.ReadAll(r.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return
-	}
-
-	var userData struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	err = json.Unmarshal(jsonData, &userData)
-	if err != nil {
-		fmt.Println("Error unmarshaling:", err)
-		return
-	}
-	fmt.Println("Decoded User:", userData)
-
-	signInInput := &auth.SignInInput{
-		Email:    userData.Email,
-		Password: userData.Password,
-	}
-
-	output, err := signIn.Execute(signInInput)
-	if err != nil {
-		respondWithError(w, "Erro ao efetuar login: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println("Output:", output)
-
-	if *output.UserType != "driver" {
-		respondWithError(w, "Erro ao efetuar login: usuário não é um motorista", http.StatusBadRequest)
-		return
-	}
-
-	driverId, err := strconv.Atoi(*output.UserId)
-	if err != nil {
-		respondWithError(w, "Erro ao efetuar login: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	deliveries, err := listDelivery.Execute(driverId)
-	if err != nil {
-		respondWithError(w, "Erro ao efetuar login: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	value := map[string]string{
-		"UserId":   *output.UserId,
-		"UserType": *output.UserType,
-	}
-
-	if encoded, err := cookies.S.Encode("userCookieDriver", value); err == nil {
-		cookie := &http.Cookie{
-			Name:     "userCookieDriver",
-			Value:    encoded,
-			Path:     "/",
-			MaxAge:   3600,
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteLaxMode,
-		}
-		http.SetCookie(w, cookie)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(deliveries)
 }
 
 func respondWithError(w http.ResponseWriter, message string, statusCode int) {
