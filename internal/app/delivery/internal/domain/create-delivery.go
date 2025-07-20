@@ -1,26 +1,24 @@
-package delivery
+package domain
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type CreateDelivery struct {
-	deliveryRepository domain.DeliveryRepository
-	userRepository     domain.UserRepository
+	deliveryRepository DeliveryRepository
+	userDao            UserDao
 }
 
-func NewCreateDelivery(deliveryRepository domain.DeliveryRepository, userRepository domain.UserRepository) *CreateDelivery {
+func NewCreateDelivery(deliveryRepository DeliveryRepository, userDao UserDao) *CreateDelivery {
 	return &CreateDelivery{
 		deliveryRepository: deliveryRepository,
-		userRepository:     userRepository,
+		userDao:            userDao,
 	}
 }
 func (r *CreateDelivery) Execute(inut *CreateDeliveryInput) error {
 
-	driver, err := r.userRepository.FindById(inut.DriverId)
+	driver, err := r.userDao.FindDriverById(inut.DriverId)
 	if err != nil {
 		return fmt.Errorf("error Create delivery: %w", err)
 	}
@@ -29,7 +27,7 @@ func (r *CreateDelivery) Execute(inut *CreateDeliveryInput) error {
 		return errors.New("error Create delivery: driver not found")
 	}
 
-	company, err := r.userRepository.FindById(inut.CompanyId)
+	company, err := r.userDao.FindCompanyById(inut.CompanyId)
 	if err != nil {
 		return fmt.Errorf("error Create delivery: %w", err)
 	}
@@ -38,7 +36,7 @@ func (r *CreateDelivery) Execute(inut *CreateDeliveryInput) error {
 		return errors.New("error Create delivery: company not found")
 	}
 
-	delivery := domain.NewDelivery(inut.CompanyId, inut.DriverId, inut.Recipient, inut.Address)
+	delivery := NewDelivery(inut.CompanyId, inut.DriverId, inut.Recipient, inut.Address)
 	err = r.deliveryRepository.Save(delivery)
 	if err != nil {
 		return fmt.Errorf("error Create delivery: %w", err)

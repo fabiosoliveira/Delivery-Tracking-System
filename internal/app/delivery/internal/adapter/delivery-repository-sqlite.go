@@ -1,10 +1,10 @@
-package database
+package adapter
 
 import (
 	"database/sql"
 	"fmt"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery/internal/domain"
 )
 
 type DeliveryRepositorySqlite struct {
@@ -35,25 +35,25 @@ func (d DeliveryRepositorySqlite) UpdateLocation(location *domain.Location, deli
 	return nil
 }
 
-func (d DeliveryRepositorySqlite) FindById(deliveryId uint) (*domain.Delivery, error) {
-	row := d.Db.QueryRow("SELECT * FROM Deliveries WHERE id = ?", deliveryId)
+// func (d DeliveryRepositorySqlite) FindById(deliveryId uint) (*domain.Delivery, error) {
+// 	row := d.Db.QueryRow("SELECT * FROM Deliveries WHERE id = ?", deliveryId)
 
-	var id, company_id, driver_id uint
-	var status uint8
-	var recipient, address string
+// 	var id, company_id, driver_id uint
+// 	var status uint8
+// 	var recipient, address string
 
-	err := row.Scan(&id, &status, &recipient, &address, &company_id, &driver_id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("error finding Delivery: %w", err)
-	}
+// 	err := row.Scan(&id, &status, &recipient, &address, &company_id, &driver_id)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return nil, nil
+// 		}
+// 		return nil, fmt.Errorf("error finding Delivery: %w", err)
+// 	}
 
-	delivery := domain.RestoreDelivery(id, status, company_id, driver_id, recipient, address)
+// 	delivery := domain.RestoreDelivery(id, status, company_id, driver_id, recipient, address)
 
-	return delivery, nil
-}
+// 	return delivery, nil
+// }
 
 func (d DeliveryRepositorySqlite) ListDeliveryByCompanyId(id int) ([]domain.Delivery, error) {
 	rows, err := d.Db.Query("SELECT * FROM Deliveries WHERE company_id = ?", id)
@@ -78,28 +78,28 @@ func (d DeliveryRepositorySqlite) ListDeliveryByCompanyId(id int) ([]domain.Deli
 	return deliveries, nil
 }
 
-func (d DeliveryRepositorySqlite) ListDeliveryByDriverId(driverId int) ([]domain.Delivery, error) {
-	rows, err := d.Db.Query("SELECT * FROM Deliveries WHERE driver_id = ?", driverId)
-	if err != nil {
-		return nil, fmt.Errorf("error listing deliveries: %w", err)
-	}
-	defer rows.Close()
+// func (d DeliveryRepositorySqlite) ListDeliveryByDriverId(driverId int) ([]domain.Delivery, error) {
+// 	rows, err := d.Db.Query("SELECT * FROM Deliveries WHERE driver_id = ?", driverId)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error listing deliveries: %w", err)
+// 	}
+// 	defer rows.Close()
 
-	var deliveries []domain.Delivery
-	for rows.Next() {
-		var status, id, company_id, driver_id int
-		var recipient, address string
-		if err := rows.Scan(&id, &status, &recipient, &address, &company_id, &driver_id); err != nil {
-			return nil, fmt.Errorf("error listing deliveries: %w", err)
-		}
+// 	var deliveries []domain.Delivery
+// 	for rows.Next() {
+// 		var status, id, company_id, driver_id int
+// 		var recipient, address string
+// 		if err := rows.Scan(&id, &status, &recipient, &address, &company_id, &driver_id); err != nil {
+// 			return nil, fmt.Errorf("error listing deliveries: %w", err)
+// 		}
 
-		delivery := domain.RestoreDelivery(uint(id), uint8(status), uint(company_id), uint(driver_id), recipient, address)
+// 		delivery := domain.RestoreDelivery(uint(id), uint8(status), uint(company_id), uint(driver_id), recipient, address)
 
-		deliveries = append(deliveries, *delivery)
-	}
+// 		deliveries = append(deliveries, *delivery)
+// 	}
 
-	return deliveries, nil
-}
+// 	return deliveries, nil
+// }
 
 func (d DeliveryRepositorySqlite) FindLocationsByDeliveryID(deliveryID int) ([]domain.Location, error) {
 	query := `SELECT latitude, longitude FROM Locations WHERE delivery_id = ? ORDER BY timestamp ASC`

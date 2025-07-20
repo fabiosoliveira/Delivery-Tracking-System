@@ -1,12 +1,10 @@
-package delivery
-
-import "github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
+package domain
 
 type GetDeliveryHistory struct {
-	deliveryRepository domain.DeliveryRepository
+	deliveryRepository DeliveryRepository
 }
 
-func NewGetDeliveryHistory(deliveryRepository domain.DeliveryRepository) *GetDeliveryHistory {
+func NewGetDeliveryHistory(deliveryRepository DeliveryRepository) *GetDeliveryHistory {
 	return &GetDeliveryHistory{
 		deliveryRepository: deliveryRepository,
 	}

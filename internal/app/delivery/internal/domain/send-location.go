@@ -1,22 +1,20 @@
-package delivery
+package domain
 
 import (
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type SendLocation struct {
-	deliveryRepository domain.DeliveryRepository
+	deliveryRepository DeliveryRepository
 }
 
-func NewSendLocation(deliveryRepository domain.DeliveryRepository) *SendLocation {
+func NewSendLocation(deliveryRepository DeliveryRepository) *SendLocation {
 	return &SendLocation{
 		deliveryRepository: deliveryRepository,
 	}
 }
 func (r *SendLocation) Execute(inut *SendLocationInput) error {
-	location := domain.NewLocation(inut.Latitude, inut.Longitude)
+	location := NewLocation(inut.Latitude, inut.Longitude)
 
 	err := r.deliveryRepository.UpdateLocation(location, uint(inut.Delivery))
 	if err != nil {

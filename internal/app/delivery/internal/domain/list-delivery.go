@@ -1,20 +1,18 @@
-package delivery
+package domain
 
 import (
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type ListDelivery struct {
-	deliveryRepository domain.DeliveryRepository
-	userRepository     domain.UserRepository
+	deliveryRepository DeliveryRepository
+	userDao            UserDao
 }
 
-func NewListDelivery(deliveryRepository domain.DeliveryRepository, userRepository domain.UserRepository) *ListDelivery {
+func NewListDelivery(deliveryRepository DeliveryRepository, userDao UserDao) *ListDelivery {
 	return &ListDelivery{
 		deliveryRepository: deliveryRepository,
-		userRepository:     userRepository,
+		userDao:            userDao,
 	}
 }
 
@@ -26,11 +24,11 @@ func (r *ListDelivery) Execute(companyId int) ([]ListDeliveryOutput, error) {
 
 	var deliveriesOutput []ListDeliveryOutput
 	for _, delivery := range deliveries {
-		driver, err := r.userRepository.FindById(delivery.Driver_id())
+		driver, err := r.userDao.FindDriverById(delivery.Driver_id())
 		if err != nil {
 			return nil, fmt.Errorf("error listing deliveries: %w", err)
 		}
-		deliveriesOutput = append(deliveriesOutput, ListDeliveryOutput{delivery.Id(), *delivery.Status().String(), driver.Name(), delivery.Recipient(), delivery.Address()})
+		deliveriesOutput = append(deliveriesOutput, ListDeliveryOutput{delivery.Id(), *delivery.Status().String(), driver.Name, delivery.Recipient(), delivery.Address()})
 	}
 
 	return deliveriesOutput, nil
