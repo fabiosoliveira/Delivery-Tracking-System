@@ -1,24 +1,22 @@
-package driver
+package domain
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type Register struct {
-	userRepository domain.UserRepository
+	driverRepository DriverRepository
 }
 
-func NewRegister(repository domain.UserRepository) *Register {
+func NewRegister(repository DriverRepository) *Register {
 	return &Register{
-		userRepository: repository,
+		driverRepository: repository,
 	}
 }
 
 func (r *Register) Execute(inut *RegisterInput) error {
-	driver, err := r.userRepository.FindByEmail(&inut.Email)
+	driver, err := r.driverRepository.FindByEmail(&inut.Email)
 	if err != nil {
 		return fmt.Errorf("error register driver: %w", err)
 	}
@@ -27,12 +25,12 @@ func (r *Register) Execute(inut *RegisterInput) error {
 		return errors.New("error register driver: driver already exists")
 	}
 
-	driver, err = domain.NewDriver(inut.Name, inut.Email, inut.Password, inut.CompanyId)
+	driver, err = NewDriver(inut.Name, inut.Email, inut.Password, inut.CompanyId)
 	if err != nil {
 		return fmt.Errorf("error register driver: %w", err)
 	}
 
-	err = r.userRepository.Save(driver)
+	err = r.driverRepository.Save(driver)
 	if err != nil {
 		return fmt.Errorf("error register driver: %w", err)
 	}

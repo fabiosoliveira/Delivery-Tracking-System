@@ -1,23 +1,21 @@
-package driver
+package domain
 
 import (
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type ListDrivers struct {
-	userRepository domain.UserRepository
+	driverRepository DriverRepository
 }
 
-func NewListDrivers(repository domain.UserRepository) *ListDrivers {
+func NewListDrivers(repository DriverRepository) *ListDrivers {
 	return &ListDrivers{
-		userRepository: repository,
+		driverRepository: repository,
 	}
 }
 
 func (r *ListDrivers) Execute(userId int) ([]ListDriversOutput, error) {
-	drivers, err := r.userRepository.ListDriversByCompanyId(userId)
+	drivers, err := r.driverRepository.ListDriversByCompanyId(userId)
 	if err != nil {
 		return nil, fmt.Errorf("error listing drivers: %w", err)
 	}
