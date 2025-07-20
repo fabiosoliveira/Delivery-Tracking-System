@@ -1,24 +1,22 @@
-package auth
+package domain
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/domain"
 )
 
 type SignUp struct {
-	userRepository domain.UserRepository
+	companyRepository CompanyRepository
 }
 
-func NewSignUp(repository domain.UserRepository) *SignUp {
+func NewSignUp(repository CompanyRepository) *SignUp {
 	return &SignUp{
-		userRepository: repository,
+		companyRepository: repository,
 	}
 }
 
 func (su *SignUp) Execute(inut *SignUpInput) error {
-	company, err := su.userRepository.FindByEmail(&inut.Email)
+	company, err := su.companyRepository.FindByEmail(&inut.Email)
 	if err != nil {
 		return fmt.Errorf("error signing up: %w", err)
 	}
@@ -27,12 +25,12 @@ func (su *SignUp) Execute(inut *SignUpInput) error {
 		return errors.New("error signing up: company already exists")
 	}
 
-	newCompany, err := domain.NewCompany(inut.Name, inut.Email, inut.Password)
+	newCompany, err := NewCompany(inut.Name, inut.Email, inut.Password)
 	if err != nil {
 		return fmt.Errorf("error signing up: %w", err)
 	}
 
-	err = su.userRepository.Save(newCompany)
+	err = su.companyRepository.Save(newCompany)
 	if err != nil {
 		return fmt.Errorf("error signing up: %w", err)
 	}

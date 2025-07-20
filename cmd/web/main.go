@@ -30,8 +30,8 @@ func main() {
 
 	db := database.DB
 	userRepository := database.NewUserRepositorySqlite(db)
-	signUp := auth.NewSignUp(userRepository)
-	signIn := auth.NewSignIn(userRepository)
+	// signUp := auth.NewSignUp(userRepository)
+	// signIn := auth.NewSignIn(userRepository)
 	listDrivers := driver.NewListDrivers(userRepository)
 	registerDriver := driver.NewRegister(userRepository)
 
@@ -44,92 +44,94 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /auth/signup", func(w http.ResponseWriter, r *http.Request) {
+	auth.Module(mux, db)
 
-		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signup.gohtml"))
+	// mux.HandleFunc("GET /auth/signup", func(w http.ResponseWriter, r *http.Request) {
 
-		tpl.ExecuteTemplate(w, "layout", nil)
+	// 	tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signup.gohtml"))
 
-	})
+	// 	tpl.ExecuteTemplate(w, "layout", nil)
 
-	mux.HandleFunc("POST /auth/signup", func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			TrowError(err, w, r)
-			return
-		}
+	// })
 
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		password := r.FormValue("password")
+	// mux.HandleFunc("POST /auth/signup", func(w http.ResponseWriter, r *http.Request) {
+	// 	err := r.ParseForm()
+	// 	if err != nil {
+	// 		TrowError(err, w, r)
+	// 		return
+	// 	}
 
-		signUpInput := &auth.SignUpInput{
-			Name:     name,
-			Email:    email,
-			Password: password,
-		}
+	// 	name := r.FormValue("name")
+	// 	email := r.FormValue("email")
+	// 	password := r.FormValue("password")
 
-		err = signUp.Execute(signUpInput)
-		if err != nil {
-			TrowError(err, w, r)
-			return
-		}
+	// 	signUpInput := &auth.SignUpInput{
+	// 		Name:     name,
+	// 		Email:    email,
+	// 		Password: password,
+	// 	}
 
-		http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
-	})
+	// 	err = signUp.Execute(signUpInput)
+	// 	if err != nil {
+	// 		TrowError(err, w, r)
+	// 		return
+	// 	}
 
-	mux.HandleFunc("GET /auth/signin", func(w http.ResponseWriter, r *http.Request) {
+	// 	http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
+	// })
 
-		tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signin.gohtml"))
+	// mux.HandleFunc("GET /auth/signin", func(w http.ResponseWriter, r *http.Request) {
 
-		tpl.ExecuteTemplate(w, "layout", nil)
+	// 	tpl := template.Must(template.ParseFiles("template/layout.gohtml", "template/signin.gohtml"))
 
-	})
+	// 	tpl.ExecuteTemplate(w, "layout", nil)
 
-	mux.HandleFunc("POST /auth/signin", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("POST /auth/signin")
+	// })
 
-		err := r.ParseForm()
-		if err != nil {
-			TrowError(err, w, r)
-			return
-		}
+	// mux.HandleFunc("POST /auth/signin", func(w http.ResponseWriter, r *http.Request) {
+	// 	log.Println("POST /auth/signin")
 
-		email := r.FormValue("email")
-		password := r.FormValue("password")
+	// 	err := r.ParseForm()
+	// 	if err != nil {
+	// 		TrowError(err, w, r)
+	// 		return
+	// 	}
 
-		signInInput := &auth.SignInInput{
-			Email:    email,
-			Password: password,
-		}
+	// 	email := r.FormValue("email")
+	// 	password := r.FormValue("password")
 
-		output, err := signIn.Execute(signInInput)
-		if err != nil {
-			TrowError(err, w, r)
-			return
-		}
+	// 	signInInput := &auth.SignInInput{
+	// 		Email:    email,
+	// 		Password: password,
+	// 	}
 
-		value := map[string]string{
-			"UserId":   *output.UserId,
-			"UserType": *output.UserType,
-		}
+	// 	output, err := signIn.Execute(signInInput)
+	// 	if err != nil {
+	// 		TrowError(err, w, r)
+	// 		return
+	// 	}
 
-		if encoded, err := cookies.S.Encode("userCookie", value); err == nil {
-			cookie := &http.Cookie{
-				Name:     "userCookie",
-				Value:    encoded,
-				Path:     "/",
-				MaxAge:   3600,
-				HttpOnly: true,
-				Secure:   true,
-				SameSite: http.SameSiteLaxMode,
-			}
-			http.SetCookie(w, cookie)
-		}
+	// 	value := map[string]string{
+	// 		"UserId":   *output.UserId,
+	// 		"UserType": *output.UserType,
+	// 	}
 
-		log.Println("Redirect to /drivers")
-		http.Redirect(w, r, "/drivers", http.StatusSeeOther)
-	})
+	// 	if encoded, err := cookies.S.Encode("userCookie", value); err == nil {
+	// 		cookie := &http.Cookie{
+	// 			Name:     "userCookie",
+	// 			Value:    encoded,
+	// 			Path:     "/",
+	// 			MaxAge:   3600,
+	// 			HttpOnly: true,
+	// 			Secure:   true,
+	// 			SameSite: http.SameSiteLaxMode,
+	// 		}
+	// 		http.SetCookie(w, cookie)
+	// 	}
+
+	// 	log.Println("Redirect to /drivers")
+	// 	http.Redirect(w, r, "/drivers", http.StatusSeeOther)
+	// })
 
 	mux.HandleFunc("GET /drivers", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("GET /drivers")
