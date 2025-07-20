@@ -13,14 +13,12 @@ import (
 )
 
 type controllers struct {
-	signUp *domain.SignUp
-	signIn *domain.SignIn
+	db *sql.DB
 }
 
 func newControllers(db *sql.DB) *controllers {
 	return &controllers{
-		signUp: domain.NewSignUp(adapter.NewUserRepositorySqlite(db)),
-		signIn: domain.NewSignIn(adapter.NewUserRepositorySqlite(db)),
+		db: db,
 	}
 }
 
@@ -47,7 +45,8 @@ func (c *controllers) postSignup(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
-	err = c.signUp.Execute(signUpInput)
+	signUp := domain.NewSignUp(adapter.NewUserRepositorySqlite(c.db))
+	err = signUp.Execute(signUpInput)
 	if err != nil {
 		utils.TrowError(err, w, r)
 		return
@@ -81,7 +80,8 @@ func (c *controllers) postSignin(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
-	output, err := c.signIn.Execute(signInInput)
+	signIn := domain.NewSignIn(adapter.NewUserRepositorySqlite(c.db))
+	output, err := signIn.Execute(signInInput)
 	if err != nil {
 		utils.TrowError(err, w, r)
 		return
