@@ -12,7 +12,7 @@ import (
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app-delivery/internal/adapter"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app-delivery/internal/domain"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/cookies"
 )
 
 type controllers struct {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"unicode/utf8"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/utils"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 

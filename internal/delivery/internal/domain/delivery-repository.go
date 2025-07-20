@@ -5,6 +5,6 @@ type DeliveryRepository interface {
 	ListDeliveryByCompanyId(id int) ([]Delivery, error)
 	// ListDeliveryByDriverId(driverId int) ([]Delivery, error)
 	// FindById(deliveryId uint) (*Delivery, error)
-	UpdateLocation(location *Location, deliveryId uint) error
+	// UpdateLocation(location *Location, deliveryId uint) error
 	FindLocationsByDeliveryID(deliveryID int) ([]Location, error)
 }

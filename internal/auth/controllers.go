@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth/internal/adapter"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth/internal/domain"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/utils"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/auth/internal/adapter"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/auth/internal/domain"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/utils"
 )
 
 type controllers struct {

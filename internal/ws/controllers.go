@@ -1,17 +1,27 @@
 package ws
 
 import (
-	"encoding/json"
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/ws/internal/adapter"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/ws/internal/domain"
 	"github.com/gorilla/websocket"
 )
+
+type controllers struct {
+	db *sql.DB
+}
+
+func newControllers(db *sql.DB) *controllers {
+	return &controllers{
+		db: db,
+	}
+}
 
 type GPSData struct {
 	Delivery  int64   `json:"delivery_id"`
@@ -30,9 +40,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func HandleConnection(w http.ResponseWriter, r *http.Request) {
-	deliveryRepository := database.NewDeliveryRepositorySqlite(database.DB)
-	sendLocation := delivery.NewSendLocation(deliveryRepository)
+func (c *controllers) HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -65,7 +73,10 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		}
 		clientsMutex.Unlock()
 
-		err = sendLocation.Execute(&delivery.SendLocationInput{
+		deliveryDao := adapter.NewDeliveryDAOSqlite(c.db)
+		sendLocation := domain.NewSendLocation(deliveryDao)
+
+		err = sendLocation.Execute(&domain.SendLocationInput{
 			Delivery:  gpsData.Delivery,
 			Latitude:  gpsData.Latitude,
 			Longitude: gpsData.Longitude,
@@ -77,7 +88,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleClientConnection(w http.ResponseWriter, r *http.Request) {
+func (c *controllers) HandleClientConnection(w http.ResponseWriter, r *http.Request) {
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 3 {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
@@ -112,18 +123,4 @@ func HandleClientConnection(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-}
-
-func respondWithError(w http.ResponseWriter, message string, statusCode int) {
-	response := struct {
-		Message    string `json:"message"`
-		StatusCode int    `json:"statusCode"`
-	}{
-		Message:    message,
-		StatusCode: statusCode,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(response)
 }

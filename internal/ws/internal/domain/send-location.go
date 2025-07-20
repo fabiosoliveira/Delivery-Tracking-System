@@ -5,18 +5,18 @@ import (
 )
 
 type SendLocation struct {
-	deliveryRepository DeliveryRepository
+	deliveryDAO DeliveryDAO
 }
 
-func NewSendLocation(deliveryRepository DeliveryRepository) *SendLocation {
+func NewSendLocation(deliveryDAO DeliveryDAO) *SendLocation {
 	return &SendLocation{
-		deliveryRepository: deliveryRepository,
+		deliveryDAO: deliveryDAO,
 	}
 }
 func (r *SendLocation) Execute(inut *SendLocationInput) error {
 	location := NewLocation(inut.Latitude, inut.Longitude)
 
-	err := r.deliveryRepository.UpdateLocation(location, uint(inut.Delivery))
+	err := r.deliveryDAO.UpdateLocation(location, uint(inut.Delivery))
 	if err != nil {
 		return fmt.Errorf("error sending location: %w", err)
 	}

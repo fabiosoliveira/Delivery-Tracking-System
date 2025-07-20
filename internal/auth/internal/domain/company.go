@@ -4,8 +4,8 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/utils"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/valueObject"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/utils"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/valueObject"
 )
 
 type Company struct {

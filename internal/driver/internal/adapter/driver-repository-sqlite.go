@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver/internal/domain"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/driver/internal/domain"
 )
 
 type DriverRepositorySqlite struct {

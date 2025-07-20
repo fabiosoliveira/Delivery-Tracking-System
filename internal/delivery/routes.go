@@ -1,8 +1,12 @@
 package delivery
 
-import "net/http"
+import (
+	"database/sql"
+	"net/http"
+)
 
-func registerRoutes(mux *http.ServeMux, controllers *controllers) {
+func Register(mux *http.ServeMux, db *sql.DB) {
+	controllers := newControllers(db)
 
 	mux.HandleFunc("GET /delivery", controllers.getDelivery)
 

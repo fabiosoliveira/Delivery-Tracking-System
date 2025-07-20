@@ -8,9 +8,10 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver"
+	appDelivery "github.com/fabiosoliveira/Delivery-Tracking-System/internal/app-delivery"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/auth"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/delivery"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/driver"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/ws"
 )
@@ -27,14 +28,11 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	auth.Module(mux, db)
-	delivery.Module(mux, db)
-	driver.Module(mux, db)
-
-	mux.HandleFunc("GET /app-delivery", ws.AppDelivery)
-	mux.HandleFunc("POST /app-delivery/login", ws.LoginAppDelivery)
-	mux.HandleFunc("/ws", ws.HandleConnection)
-	mux.HandleFunc("/ws/", ws.HandleClientConnection)
+	auth.Register(mux, db)
+	delivery.Register(mux, db)
+	driver.Register(mux, db)
+	appDelivery.Register(mux, db)
+	ws.Register(mux, db)
 
 	server := &http.Server{
 		Addr:    ":8080",

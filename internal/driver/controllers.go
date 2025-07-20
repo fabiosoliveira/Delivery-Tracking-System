@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"text/template"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver/internal/adapter"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver/internal/domain"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/utils"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/driver/internal/adapter"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/driver/internal/domain"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/cookies"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/internal/utils"
 )
 
 type controllers struct {

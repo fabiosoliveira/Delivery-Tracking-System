@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth/internal/domain"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/auth/internal/domain"
 )
 
 type CompanyRepositorySqlite struct {
