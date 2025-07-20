@@ -24,9 +24,9 @@ fabio@gmail.com
 
 func main() {
 
-	db := database.DB
-
 	mux := http.NewServeMux()
+
+	db := database.DB
 
 	auth.Register(mux, db)
 	delivery.Register(mux, db)
