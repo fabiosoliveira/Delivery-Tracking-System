@@ -5,13 +5,14 @@ import (
 	"unicode/utf8"
 
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/utils"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/internal/valueObject"
 )
 
 type Company struct {
 	id       uint
 	name     string
-	email    email
-	password password
+	email    valueObject.Email
+	password valueObject.Password
 }
 
 func NewCompany(name string, email string, password string) (*Company, error) {
@@ -33,8 +34,8 @@ func RestoreCompany(id int, name string, _email string, passwordHash string) *Co
 	return &Company{
 		id:       uint(id),
 		name:     name,
-		email:    email(_email),
-		password: password(passwordHash),
+		email:    valueObject.Email(_email),
+		password: valueObject.Password(passwordHash),
 	}
 }
 
@@ -50,7 +51,7 @@ func (u *Company) SetName(name string) error {
 }
 
 func (u *Company) SetEmail(e_mail string) error {
-	_email := email(e_mail)
+	_email := valueObject.Email(e_mail)
 
 	err := _email.ValidateEmail()
 	if err != nil {
@@ -62,7 +63,7 @@ func (u *Company) SetEmail(e_mail string) error {
 }
 
 func (u *Company) SetPassword(pass string) error {
-	_password := password(pass)
+	_password := valueObject.Password(pass)
 
 	err := _password.ValidatePassword()
 	if err != nil {
