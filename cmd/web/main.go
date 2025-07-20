@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,8 +11,8 @@ import (
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/auth"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/delivery"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/driver"
-	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/app/ws"
 	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/infra/database"
+	"github.com/fabiosoliveira/Delivery-Tracking-System/internal/ws"
 )
 
 /**
@@ -72,16 +71,4 @@ func main() {
 	}
 
 	fmt.Println("Servidor finalizado com sucesso.")
-}
-
-func TrowError(err error, w http.ResponseWriter, r *http.Request) {
-	tpl := template.Must(template.ParseFiles("template/error.gohtml"))
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusBadRequest)
-
-	tpl.Execute(w, struct {
-		Error string
-		Url   string
-	}{err.Error(), r.URL.String()})
 }
