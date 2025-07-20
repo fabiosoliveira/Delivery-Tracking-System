@@ -31,22 +31,7 @@ func (ur UserDaoSqlite) FindDriverById(id uint) (*domain.User, error) {
 	return ur.toUser(row)
 }
 
-// func (ur UserRepositorySqlite) Save(user domain.User) error {
-// 	var companyId any
-// 	if user.UserType() == domain.UserTypeDriver {
-// 		companyId = user.(*domain.Driver).CompanyId()
-// 	}
-
-// 	_, err := ur.Db.Exec("INSERT INTO Users (name, email, password, company_id) VALUES (?, ?, ?, ?)", user.Name(), user.Email(), user.Password(), companyId)
-// 	if err != nil {
-// 		return fmt.Errorf("error saving user: %w", err)
-// 	}
-
-// 	return nil
-// }
-
 func (ur UserDaoSqlite) toUser(row *sql.Row) (*domain.User, error) {
-	// row := ur.Db.QueryRow("SELECT name FROM Users WHERE id = ? AND company_id IS NULL", userId)
 
 	var name string
 
@@ -63,30 +48,6 @@ func (ur UserDaoSqlite) toUser(row *sql.Row) (*domain.User, error) {
 	}
 	return &user, nil
 }
-
-// func (ur UserRepositorySqlite) FindByEmail(email *string) (domain.User, error) {
-// 	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ?", email)
-
-// 	var id int64
-// 	var companyId any
-// 	var name, _email, passwordHash string
-
-// 	err := row.Scan(&id, &name, &_email, &passwordHash, &companyId)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, nil
-// 		}
-// 		return nil, fmt.Errorf("error finding user: %w", err)
-// 	}
-
-// 	if companyId != nil {
-// 		user := domain.RestoreDriver(int(id), name, _email, passwordHash, int(companyId.(int64)))
-// 		return user, nil
-// 	}
-
-// 	user := domain.RestoreCompany(int(id), name, _email, passwordHash)
-// 	return user, nil
-// }
 
 func (ur UserDaoSqlite) ListDriversByCompanyId(id int) ([]domain.User, error) {
 	rows, err := ur.Db.Query("SELECT * FROM Users WHERE company_id = ? AND company_id IS NOT NULL", id)

@@ -24,11 +24,11 @@ func (r *ListDelivery) Execute(companyId int) ([]ListDeliveryOutput, error) {
 
 	var deliveriesOutput []ListDeliveryOutput
 	for _, delivery := range deliveries {
-		driver, err := r.driverRepository.FindById(delivery.Driver_id())
+		driver, err := r.driverRepository.FindById(delivery.DriverId)
 		if err != nil {
 			return nil, fmt.Errorf("error listing deliveries: %w", err)
 		}
-		deliveriesOutput = append(deliveriesOutput, ListDeliveryOutput{delivery.Id(), *delivery.Status().String(), driver.Name(), delivery.Recipient(), delivery.Address()})
+		deliveriesOutput = append(deliveriesOutput, ListDeliveryOutput{delivery.Id, *delivery.Status.String(), driver.Name(), delivery.Recipient, delivery.Address})
 	}
 
 	return deliveriesOutput, nil

@@ -27,30 +27,6 @@ func (ur DriverRepositorySqlite) Save(driver *domain.Driver) error {
 	return nil
 }
 
-// func (ur DriverRepositorySqlite) FindById(userId uint) (domain.User, error) {
-// 	row := ur.Db.QueryRow("SELECT * FROM Users WHERE id = ?", userId)
-
-// 	var id int64
-// 	var companyId any
-// 	var name, _email, passwordHash string
-
-// 	err := row.Scan(&id, &name, &_email, &passwordHash, &companyId)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, nil
-// 		}
-// 		return nil, fmt.Errorf("error finding user: %w", err)
-// 	}
-
-// 	if companyId != nil {
-// 		user := domain.RestoreDriver(int(id), name, _email, passwordHash, int(companyId.(int64)))
-// 		return user, nil
-// 	}
-
-// 	user := domain.RestoreCompany(int(id), name, _email, passwordHash)
-// 	return user, nil
-// }
-
 func (ur DriverRepositorySqlite) FindByEmail(email *string) (*domain.Driver, error) {
 	row := ur.Db.QueryRow("SELECT * FROM Users WHERE email = ? AND company_id IS NOT NULL", email)
 

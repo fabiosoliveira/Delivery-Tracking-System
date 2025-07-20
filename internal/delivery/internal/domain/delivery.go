@@ -5,9 +5,8 @@ type Delivery struct {
 	status     statusDelivery
 	company_id uint
 	driver_id  uint
-	// locations  []Location
-	recipient string
-	address   string
+	recipient  string
+	address    string
 }
 
 func NewDelivery(company_id uint, driver_id uint, recipient string, address string) *Delivery {
@@ -15,9 +14,8 @@ func NewDelivery(company_id uint, driver_id uint, recipient string, address stri
 		status:     StatusPendente,
 		company_id: company_id,
 		driver_id:  driver_id,
-		// locations:  []Location{},
-		recipient: recipient,
-		address:   address,
+		recipient:  recipient,
+		address:    address,
 	}
 }
 
@@ -27,9 +25,8 @@ func RestoreDelivery(id uint, status uint8, company_id uint, driver_id uint, rec
 		status:     statusDelivery(status),
 		company_id: company_id,
 		driver_id:  driver_id,
-		// locations:  []Location{},
-		recipient: recipient,
-		address:   address,
+		recipient:  recipient,
+		address:    address,
 	}
 }
 
@@ -49,10 +46,6 @@ func (d *Delivery) Driver_id() uint {
 	return d.driver_id
 }
 
-// func (d *Delivery) Locations() []Location {
-// 	return d.locations
-// }
-
 func (d *Delivery) Recipient() string {
 	return d.recipient
 }
@@ -60,13 +53,3 @@ func (d *Delivery) Recipient() string {
 func (d *Delivery) Address() string {
 	return d.address
 }
-
-// func (d *Delivery) AddLocation(id uint, latitude float64, longitude float64, timestamp int64) {
-// 	location := Location{
-// 		Id:        id,
-// 		Latitude:  latitude,
-// 		Longitude: longitude,
-// 		Timestamp: timestamp,
-// 	}
-// 	d.locations = append(d.locations, location)
-// }
